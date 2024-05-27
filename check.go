@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net"
 	"time"
 )
@@ -10,10 +11,11 @@ import (
 func isResponsive(b *Backend) bool {
 	conn, err := net.DialTimeout("tcp", b.Url.Host, 3*time.Second)
 	if err != nil {
+		Logger.Warn(fmt.Sprintf("Server with url %s is Unresponsive", b.Url.Host))
 		return false
 	}
 	conn.Close()
-	return false
+	return true
 }
 
 func (p *Pool) checkAllBackends() {
@@ -30,7 +32,9 @@ func CheckHealth(p *Pool) {
 	for {
 		select {
 		case <-t.C:
+			Logger.Debug("Health Check Started")
 			p.checkAllBackends()
+			Logger.Debug("Health Check Completed")
 		}
 	}
 }
