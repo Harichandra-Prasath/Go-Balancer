@@ -1,9 +1,18 @@
 package main
 
+import (
+	"os"
+	"strings"
+)
+
 func main() {
 	pool := GetPool()
-	b1 := GetBackend("http://localhost:4000/")
-	b2 := GetBackend("http://localhost:5000/")
-	pool.Addserver(b1)
-	pool.Addserver(b2)
+
+	data, _ := os.ReadFile("backends.txt")
+	servers := strings.Split(string(data), "\n")
+
+	for _, server := range servers {
+		b := GetBackend(server)
+		pool.Addserver(b)
+	}
 }
