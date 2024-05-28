@@ -10,6 +10,8 @@ import (
 
 var pool *Pool
 var Logger *slog.Logger
+var Pq Heapq
+var ALGO string
 
 func loadbalancer(w http.ResponseWriter, r *http.Request) {
 	Logger.Info(fmt.Sprintf("Client Request at %s", r.URL.Path))
@@ -18,13 +20,23 @@ func loadbalancer(w http.ResponseWriter, r *http.Request) {
 	} else if strings.HasPrefix(r.URL.Path, "/media/") {
 		Logger.Debug("Serving Media Content")
 	} else {
-		backend := pool.GetHealthyBackend()
+		var backend *Backend
+		switch ALGO {
+		case "LC":
+			backend = pool.GetHealthyBackendLC()
+			defer Release_Connection(backend)
+		default:
+			backend = pool.GetHealthyBackendRR()
+		}
 		if backend != nil {
+
 			Logger.Debug(fmt.Sprintf("Proxying the request to %s", backend.Url.Host))
 			backend.Proxy.ServeHTTP(w, r)
+			fmt.Print("Hello")
 			return
 		} else {
 			Logger.Error("No Servers available at the Moment")
+			w.Write([]byte("Sorry, No servers available at the Moment\n"))
 		}
 	}
 }
@@ -39,19 +51,24 @@ func ConfigLog() {
 func main() {
 
 	ConfigLog()
-
+	ALGO = "LC"
 	pool = GetPool()
 	Logger.Info("Sever Pool Created")
 
 	data, _ := os.ReadFile("backends.txt")
 	servers := strings.Split(string(data), "\n")
+	Pq = make(Heapq, len(servers))
 
-	for _, server := range servers {
+	for i, server := range servers {
 		b := GetBackend(server)
+		Pq[i] = &Server{
+			Backend:     b,
+			Connections: 0,
+			index:       i,
+		}
 		Logger.Debug(fmt.Sprintf("Backend with url %s added to the pool", server))
 		pool.Addserver(b)
 	}
-
 	Logger.Info("GO-Balancer Started and Serving at 3000")
 	go CheckHealth(pool)
 	err := http.ListenAndServe(":3000", http.HandlerFunc(loadbalancer))

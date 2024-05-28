@@ -10,12 +10,18 @@ import (
 
 func isResponsive(b *Backend) bool {
 	conn, err := net.DialTimeout("tcp", b.Url.Host, 3*time.Second)
+	healthy := false
 	if err != nil {
 		Logger.Warn(fmt.Sprintf("Server with url %s is Unresponsive", b.Url.Host))
-		return false
+	} else {
+		conn.Close()
+		healthy = true
 	}
-	conn.Close()
-	return true
+	if ALGO == "LC" {
+		Update_health(b, healthy)
+	}
+	return healthy
+
 }
 
 func (p *Pool) checkAllBackends() {
