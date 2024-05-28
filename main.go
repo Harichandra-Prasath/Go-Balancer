@@ -32,7 +32,6 @@ func loadbalancer(w http.ResponseWriter, r *http.Request) {
 
 			Logger.Debug(fmt.Sprintf("Proxying the request to %s", backend.Url.Host))
 			backend.Proxy.ServeHTTP(w, r)
-			fmt.Print("Hello")
 			return
 		} else {
 			Logger.Error("No Servers available at the Moment")
