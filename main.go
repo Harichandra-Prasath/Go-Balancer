@@ -11,14 +11,19 @@ import (
 var pool *Pool
 var Logger *slog.Logger
 var Pq Heapq
+
 var ALGO string
+var MEDIA_ROOT string
+var STATIC_ROOT string
 
 func loadbalancer(w http.ResponseWriter, r *http.Request) {
 	Logger.Info(fmt.Sprintf("Client Request at %s", r.URL.Path))
 	if strings.HasPrefix(r.URL.Path, "/static/") {
 		Logger.Debug("Serving Static Content")
+		ServeStatic(w, r, true)
 	} else if strings.HasPrefix(r.URL.Path, "/media/") {
 		Logger.Debug("Serving Media Content")
+		ServeStatic(w, r, false)
 	} else {
 		var backend *Backend
 		switch ALGO {

@@ -15,7 +15,7 @@ func make_request(wg *sync.WaitGroup) {
 
 func main() {
 	var wg sync.WaitGroup
-	for i := 0; i < 80; i++ {
+	for i := 0; i < 10000; i++ {
 		wg.Add(1)
 		go make_request(&wg)
 	}
