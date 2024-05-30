@@ -6,6 +6,13 @@ import (
 	"sync"
 )
 
+type Manager interface {
+	Addserver(*Backend)
+	Schedule() *Backend
+	checkAllBackends()
+	UpdateHealth(*Backend, bool)
+}
+
 type Backend struct {
 	Url    *url.URL
 	Lock   sync.RWMutex
@@ -22,13 +29,27 @@ func (p *Pool) Addserver(backend *Backend) {
 	(p.Servers) = append((p.Servers), backend)
 }
 
-func GetPool() *Pool {
-	servers := make([]*Backend, 0, 10)
+func GetPool(n int) *Pool {
+	servers := make([]*Backend, n)
 
 	return &Pool{
 		Servers: servers,
 		Current: -1,
 	}
+}
+
+func GetQueue(n int) *Heapq {
+	Queue := make(Heapq, n)
+	return &Queue
+}
+
+func (pq *Heapq) Addserver(b *Backend) {
+	len := len(*pq)
+	*pq = append(*pq, &Server{
+		Backend:     b,
+		Connections: 0,
+		index:       len,
+	})
 }
 
 func GetBackend(_url string) *Backend {

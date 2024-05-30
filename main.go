@@ -8,9 +8,8 @@ import (
 	"strings"
 )
 
-var pool *Pool
+var manager Manager
 var Logger *slog.Logger
-var Pq Heapq
 
 var ALGO string
 var MEDIA_ROOT string
@@ -25,14 +24,7 @@ func loadbalancer(w http.ResponseWriter, r *http.Request) {
 		Logger.Debug("Serving Media Content")
 		ServeStatic(w, r, false)
 	} else {
-		var backend *Backend
-		switch ALGO {
-		case "LC":
-			backend = pool.GetHealthyBackendLC()
-			defer Release_Connection(backend)
-		default:
-			backend = pool.GetHealthyBackendRR()
-		}
+		backend := manager.Schedule()
 		if backend != nil {
 
 			Logger.Debug(fmt.Sprintf("Proxying the request to %s", backend.Url.Host))
@@ -55,26 +47,13 @@ func ConfigLog() {
 func main() {
 
 	ConfigLog()
-	ALGO = "LC"
-	pool = GetPool()
 	Logger.Info("Sever Pool Created")
 
 	data, _ := os.ReadFile("backends.txt")
 	servers := strings.Split(string(data), "\n")
-	Pq = make(Heapq, len(servers))
-
-	for i, server := range servers {
-		b := GetBackend(server)
-		Pq[i] = &Server{
-			Backend:     b,
-			Connections: 0,
-			index:       i,
-		}
-		Logger.Debug(fmt.Sprintf("Backend with url %s added to the pool", server))
-		pool.Addserver(b)
-	}
+	fmt.Println(servers)
 	Logger.Info("GO-Balancer Started and Serving at 3000")
-	go CheckHealth(pool)
+	go CheckHealth(manager)
 	err := http.ListenAndServe(":3000", http.HandlerFunc(loadbalancer))
 	if err != nil {
 		Logger.Error(err.Error())

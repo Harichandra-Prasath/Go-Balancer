@@ -1,7 +1,6 @@
 package main
 
 import (
-	"math"
 	"sync/atomic"
 )
 
@@ -24,7 +23,7 @@ func (p *Pool) GetCurrent() int {
 	return int(atomic.AddInt64(&p.Current, int64(1)) % int64(len(p.Servers)))
 }
 
-func (p *Pool) GetHealthyBackendRR() *Backend {
+func (p *Pool) Schedule() *Backend {
 	// This functions implies the balancing algorithm (Round Robin) for backends and return them if and only if they are healthy
 	start := p.GetCurrent()
 	total := len(p.Servers)
@@ -43,9 +42,9 @@ func (p *Pool) GetHealthyBackendRR() *Backend {
 	return nil // No servers or none of them are healthy
 }
 
-func (p *Pool) GetHealthyBackendLC() *Backend {
+func (Pq *Heapq) Schedule() *Backend {
 	// This functions implies the balancing algorithm (Least Connections) for backends and return them if and only if they are healthy
-	for len(Pq) > 0 {
+	for len(*Pq) > 0 {
 
 		server := Pq.peek()
 		backend := server.Backend
@@ -60,33 +59,19 @@ func (p *Pool) GetHealthyBackendLC() *Backend {
 	return nil
 }
 
-func Release_Connection(b *Backend) {
+func (Pq *Heapq) Release_Connection(b *Backend) {
 	if b != nil {
-		s := Get_server(b)
+		s := Pq.Get_server(b)
 		Pq.update(s, b, s.Connections-1)
 	}
 
 }
 
-func Get_server(b *Backend) *Server {
-	for _, s := range Pq {
+func (Pq *Heapq) Get_server(b *Backend) *Server {
+	for _, s := range *Pq {
 		if s.Backend == b {
 			return s
 		}
 	}
 	return nil // no chance
-}
-
-func Update_health(b *Backend, health bool) {
-	if b.getHealth() == health {
-		return
-	} else {
-		s := Get_server(b)
-		if b.getHealth() {
-			Pq.update(s, b, math.MaxInt)
-		} else {
-			Pq.update(s, b, 0)
-		}
-	}
-
 }

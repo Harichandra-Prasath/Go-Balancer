@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"net"
 	"time"
 )
@@ -17,9 +18,7 @@ func isResponsive(b *Backend) bool {
 		conn.Close()
 		healthy = true
 	}
-	if ALGO == "LC" {
-		Update_health(b, healthy)
-	}
+	manager.UpdateHealth(b, healthy)
 	return healthy
 
 }
@@ -28,19 +27,43 @@ func (p *Pool) checkAllBackends() {
 	// Checks status of all the servers by opening a tcp connection
 	for i := range p.Servers {
 		backend := p.Servers[i]
-		status := isResponsive(backend)
-		backend.SetHealth(status)
+		isResponsive(backend)
 	}
 }
 
-func CheckHealth(p *Pool) {
+func (Pq *Heapq) checkAllBackends() {
+	// Checks status of all the servers by opening a tcp connection
+	for _, server := range *(Pq) {
+		isResponsive(server.Backend)
+	}
+}
+
+func CheckHealth(manager Manager) {
 	t := time.NewTicker(10 * time.Second)
 	for {
 		select {
 		case <-t.C:
 			Logger.Debug("Health Check Started")
-			p.checkAllBackends()
+			manager.checkAllBackends()
 			Logger.Debug("Health Check Completed")
 		}
 	}
+}
+
+func (Pq *Heapq) UpdateHealth(b *Backend, health bool) {
+	if b.getHealth() == health {
+		return
+	} else {
+		s := Pq.Get_server(b)
+		if b.getHealth() {
+			Pq.update(s, b, math.MaxInt)
+		} else {
+			Pq.update(s, b, 0)
+		}
+	}
+	b.SetHealth(health)
+}
+
+func (pool *Pool) UpdateHealth(b *Backend, health bool) {
+	b.SetHealth(health)
 }
