@@ -45,7 +45,7 @@ Port for the Go-Balancer
 List of Url strings of the backends  
 3. **ALGO**  
 Algorithm used to balance the requests  
-4. **STATIC_ROOT** 
+4. **STATIC_ROOT**    
 Path string of the directory used to server Static Content  
 5. **MEDIA_ROOT**  
 Path string of the directory used to server Media Content  
