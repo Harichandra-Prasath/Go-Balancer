@@ -18,7 +18,7 @@ func isResponsive(b *Backend) bool {
 		conn.Close()
 		healthy = true
 	}
-	manager.UpdateHealth(b, healthy)
+	MANAGER.UpdateHealth(b, healthy)
 	return healthy
 
 }
@@ -38,13 +38,13 @@ func (Pq *Heapq) checkAllBackends() {
 	}
 }
 
-func CheckHealth(manager Manager) {
+func CheckHealth(MANAGER Manager) {
 	t := time.NewTicker(10 * time.Second)
 	for {
 		select {
 		case <-t.C:
 			Logger.Debug("Health Check Started")
-			manager.checkAllBackends()
+			MANAGER.checkAllBackends()
 			Logger.Debug("Health Check Completed")
 		}
 	}

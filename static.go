@@ -14,14 +14,14 @@ func ServeStatic(w http.ResponseWriter, r *http.Request, mode bool) {
 
 	if mode {
 		fn = strings.TrimPrefix(r.URL.Path, "/static/")
-		Root = STATIC_ROOT
+		Root = GLOBAL.STATIC_ROOT
 	} else {
 		fn = strings.TrimPrefix(r.URL.Path, "/media/")
-		Root = MEDIA_ROOT
+		Root = GLOBAL.MEDIA_ROOT
 	}
 	content, err := os.ReadFile(fmt.Sprintf("%s%s", Root, fn))
 	if err != nil {
-		if strings.Contains(err.Error(), "no such") {
+		if os.IsNotExist(err) {
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte("Requested resource not found\n"))
 			Logger.Error(fmt.Sprintf("%s not found in %s", fn, Root))
