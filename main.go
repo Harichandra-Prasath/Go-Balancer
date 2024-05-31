@@ -21,7 +21,7 @@ func loadbalancer(w http.ResponseWriter, r *http.Request) {
 	} else {
 		backend := MANAGER.Schedule()
 		if backend != nil {
-
+			defer MANAGER.Release_Connection(backend)
 			Logger.Debug(fmt.Sprintf("Proxying the request to %s", backend.Url.Host))
 			backend.Proxy.ServeHTTP(w, r)
 			return

@@ -36,10 +36,16 @@ func (p *Pool) Schedule() *Backend {
 			if i != start {
 				atomic.AddInt64(&p.Current, int64(i))
 			}
+			atomic.AddInt64(&p.Active_Connections, int64(1))
 			return p.Servers[current]
 		}
 	}
 	return nil // No servers or none of them are healthy
+}
+
+func (P *Pool) Release_Connection(b *Backend) {
+	Logger.Debug("Request Completed: Removing Connection Registry")
+	atomic.AddInt64(&P.Active_Connections, int64(-1))
 }
 
 func (Pq *Heapq) Schedule() *Backend {
@@ -60,11 +66,9 @@ func (Pq *Heapq) Schedule() *Backend {
 }
 
 func (Pq *Heapq) Release_Connection(b *Backend) {
-	if b != nil {
-		s := Pq.Get_server(b)
-		Pq.update(s, b, s.Connections-1)
-	}
-
+	Logger.Debug("Request Completed: Removing Connection Registry")
+	s := Pq.Get_server(b)
+	Pq.update(s, b, s.Connections-1)
 }
 
 func (Pq *Heapq) Get_server(b *Backend) *Server {

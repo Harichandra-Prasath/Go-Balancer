@@ -11,6 +11,7 @@ type Manager interface {
 	Schedule() *Backend
 	checkAllBackends()
 	UpdateHealth(*Backend, bool)
+	Release_Connection(*Backend)
 }
 
 type Backend struct {
@@ -21,8 +22,9 @@ type Backend struct {
 }
 
 type Pool struct {
-	Servers []*Backend
-	Current int64
+	Servers            []*Backend
+	Current            int64
+	Active_Connections int64
 }
 
 func (p *Pool) Addserver(backend *Backend) {

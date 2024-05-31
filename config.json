@@ -1,7 +1,0 @@
-{
-    "Port":3000,
-    "Backends":["http://localhost:4000/","http://localhost:5000/"],
-    "ALGO":"RR",
-    "STATIC_ROOT":"/home/hcp_0/static/",
-    "MEDIA_ROOT":"/home/hcp_0/media/"
-}
