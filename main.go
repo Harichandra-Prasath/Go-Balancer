@@ -8,16 +8,31 @@ import (
 )
 
 var MANAGER Manager
+var CACHE Cache
 var Logger *slog.Logger
 
 func loadbalancer(w http.ResponseWriter, r *http.Request) {
-	Logger.Info(fmt.Sprintf("Client Request at %s", r.URL.Path))
-	if strings.HasPrefix(r.URL.Path, "/static/") {
-		Logger.Debug("Serving Static Content")
-		ServeStatic(w, r, true)
-	} else if strings.HasPrefix(r.URL.Path, "/media/") {
-		Logger.Debug("Serving Media Content")
-		ServeStatic(w, r, false)
+
+	path := r.URL.Path
+
+	Logger.Info(fmt.Sprintf("Client Request at %s", path))
+
+	Is_Static := strings.HasPrefix(path, "/static/")
+	Is_Media := strings.HasPrefix(path, "/media/")
+
+	if Is_Static || Is_Media {
+		cached, content := CACHE.get_cache(path)
+		if cached {
+			Logger.Debug("Cache Available. Writing from Cache for the request")
+			w.Write(content)
+			return
+		} else {
+			if Is_Static {
+				ServeStatic(w, &path, true)
+			} else {
+				ServeStatic(w, &path, false)
+			}
+		}
 	} else {
 		backend := MANAGER.Schedule()
 		if backend != nil {

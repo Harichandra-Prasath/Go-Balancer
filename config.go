@@ -46,6 +46,8 @@ func InitialiseSystem() error {
 		return fmt.Errorf("either STATIC or MEDIA or BOTH roots are Invalid")
 	}
 
+	CACHE = make(Cache)
+
 	switch GLOBAL.ALGO {
 	case "RR":
 		MANAGER = GetPool(0)

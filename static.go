@@ -7,16 +7,16 @@ import (
 	"strings"
 )
 
-func ServeStatic(w http.ResponseWriter, r *http.Request, mode bool) {
+func ServeStatic(w http.ResponseWriter, path *string, mode bool) {
 
 	var fn string
 	var Root string
 
 	if mode {
-		fn = strings.TrimPrefix(r.URL.Path, "/static/")
+		fn = strings.TrimPrefix(*path, "/static/")
 		Root = GLOBAL.STATIC_ROOT
 	} else {
-		fn = strings.TrimPrefix(r.URL.Path, "/media/")
+		fn = strings.TrimPrefix(*path, "/media/")
 		Root = GLOBAL.MEDIA_ROOT
 	}
 	content, err := os.ReadFile(fmt.Sprintf("%s%s", Root, fn))
@@ -32,5 +32,6 @@ func ServeStatic(w http.ResponseWriter, r *http.Request, mode bool) {
 		}
 		return
 	}
+	CACHE.add_cache(*path, content)
 	w.Write(content)
 }
