@@ -13,6 +13,7 @@ type Config struct {
 	STATIC_ROOT string
 	MEDIA_ROOT  string
 	ALGO        string
+	Poll_Period uint
 }
 
 var GLOBAL Config
@@ -60,6 +61,9 @@ func InitialiseSystem() error {
 		backend := GetBackend(url)
 		MANAGER.Addserver(backend)
 	}
+
+	// Initial health checks
+	MANAGER.checkAllBackends()
 	return nil
 }
 

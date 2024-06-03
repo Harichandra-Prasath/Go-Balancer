@@ -60,7 +60,7 @@ func GetBackend(_url string) *Backend {
 	revproxy := httputil.NewSingleHostReverseProxy(u)
 	return &Backend{
 		Url:    u,
-		Status: true,
+		Status: false,
 		Proxy:  revproxy,
 	}
 

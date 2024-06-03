@@ -12,6 +12,7 @@ func (c *Cache) add_cache(path string, content []byte) {
 	defer CLock.Unlock()
 	C := *c
 	C[path] = content
+	Logger.Debug("Writing into Cache")
 }
 
 func (c *Cache) get_cache(path string) (bool, []byte) {

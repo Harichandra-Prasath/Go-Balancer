@@ -33,13 +33,13 @@ func (p *Pool) checkAllBackends() {
 
 func (Pq *Heapq) checkAllBackends() {
 	// Checks status of all the servers by opening a tcp connection
-	for _, server := range *(Pq) {
+	for _, server := range *Pq {
 		isResponsive(server.Backend)
 	}
 }
 
 func CheckHealth(MANAGER Manager) {
-	t := time.NewTicker(10 * time.Second)
+	t := time.NewTicker(time.Duration(GLOBAL.Poll_Period) * time.Second)
 	for {
 		select {
 		case <-t.C:

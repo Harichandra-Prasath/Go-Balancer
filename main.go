@@ -23,7 +23,7 @@ func loadbalancer(w http.ResponseWriter, r *http.Request) {
 	if Is_Static || Is_Media {
 		cached, content := CACHE.get_cache(path)
 		if cached {
-			Logger.Debug("Cache Available. Writing from Cache for the request")
+			Logger.Debug("Cache Available. Reading from Cache for the request")
 			w.Write(content)
 			return
 		} else {

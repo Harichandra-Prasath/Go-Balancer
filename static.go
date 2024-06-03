@@ -32,6 +32,6 @@ func ServeStatic(w http.ResponseWriter, path *string, mode bool) {
 		}
 		return
 	}
-	CACHE.add_cache(*path, content)
+	go CACHE.add_cache(*path, content)
 	w.Write(content)
 }
