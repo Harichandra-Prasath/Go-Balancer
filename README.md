@@ -36,20 +36,24 @@ Below is the template for config.json
     "Backends":["","",...],
     "ALGO":"",
     "STATIC_ROOT":"",
-    "MEDIA_ROOT":""
+    "MEDIA_ROOT":"",
+    "Poll_Period":
 }
 ```
-1. **Port**  
+1. **Port : INT**  
 Port for the Go-Balancer
-2. **Backends**  
+2. **Backends : [ ]String**  
 List of Url strings of the backends  
-3. **ALGO**  
+3. **ALGO : String**  
 Algorithm used to balance the requests  
-4. **STATIC_ROOT**    
+4. **STATIC_ROOT : String**    
 Path string of the directory used to server Static Content  
-5. **MEDIA_ROOT**  
-Path string of the directory used to server Media Content  
+5. **MEDIA_ROOT : String**  
+Path string of the directory used to server Media Content   
+6. **Poll_Period : UINT**  
+Time in seconds that should be used for Passive Health checking of the backends  
 
+**It is must for the config.json to have all the fields, exlusion of any field will result in failure**  
   
 Currently Supported Algorithms
 ```bash
@@ -61,4 +65,3 @@ Path **MUST** be Absolute from the root of the System
 ## Future-Work
 
 1. Including additional Balancing Algorithms like Spill Over , etc..  
-2. More Configurable from the file including Health check Period, etc..
