@@ -59,6 +59,7 @@ Currently Supported Algorithms
 ```bash
 "RR" : Round Robin
 "LC" : Least Connections
+"RANDOM" : Randomly choosen backend
 ```
 Path **MUST** be Absolute from the root of the System  
 
