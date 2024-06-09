@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"strings"
 )
@@ -11,10 +13,21 @@ var MANAGER Manager
 var CACHE Cache
 var Logger *slog.Logger
 
+type ConnCtx struct {
+	key string
+}
+
+var Key = &ConnCtx{
+	key: "underlying-conn",
+}
+
+func setContext(ctx context.Context, c net.Conn) context.Context {
+	return context.WithValue(ctx, Key, c)
+}
+
 func loadbalancer(w http.ResponseWriter, r *http.Request) {
 
 	path := r.URL.Path
-
 	Logger.Info(fmt.Sprintf("Client Request at %s", path))
 
 	Is_Static := strings.HasPrefix(path, "/static/")
@@ -28,9 +41,9 @@ func loadbalancer(w http.ResponseWriter, r *http.Request) {
 			return
 		} else {
 			if Is_Static {
-				ServeStatic(w, &path, true)
+				ServeStatic(w, r, &path, true)
 			} else {
-				ServeStatic(w, &path, false)
+				ServeStatic(w, r, &path, false)
 			}
 		}
 	} else {
@@ -54,7 +67,12 @@ func main() {
 	}
 	Logger.Info(fmt.Sprintf("GO-Balancer Started and Serving at %d", GLOBAL.Port))
 	go CheckHealth(MANAGER)
-	err = http.ListenAndServe(fmt.Sprintf(":%d", GLOBAL.Port), http.HandlerFunc(loadbalancer))
+	server := http.Server{
+		Addr:        fmt.Sprintf(":%d", GLOBAL.Port),
+		Handler:     http.HandlerFunc(loadbalancer),
+		ConnContext: setContext,
+	}
+	err = server.ListenAndServe()
 	if err != nil {
 		Logger.Error(err.Error())
 		panic(err)

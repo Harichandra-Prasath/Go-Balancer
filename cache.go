@@ -1,17 +1,23 @@
 package main
 
-import "sync"
+import (
+	"os"
+	"sync"
+)
 
 // Caching for static and media files
 type Cache map[string][]byte
 
 var CLock sync.RWMutex
 
-func (c *Cache) add_cache(path string, content []byte) {
+func (c *Cache) add_cache(path string, file *os.File, size int) {
+	defer file.Close()
 	CLock.Lock()
 	defer CLock.Unlock()
 	C := *c
-	C[path] = content
+	buff := make([]byte, size)
+	n, _ := file.Read(buff)
+	C[path] = buff[:n]
 	Logger.Debug("Writing into Cache")
 }
 

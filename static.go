@@ -2,13 +2,18 @@ package main
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"strings"
+	"syscall"
 )
 
-func ServeStatic(w http.ResponseWriter, path *string, mode bool) {
+func ServeStatic(w http.ResponseWriter, r *http.Request, path *string, mode bool) {
 
+	Conn, _ := r.Context().Value(Key).(net.Conn)
+	socket_file, _ := Conn.(*net.TCPConn).File()
+	defer socket_file.Close()
 	var fn string
 	var Root string
 
@@ -19,7 +24,11 @@ func ServeStatic(w http.ResponseWriter, path *string, mode bool) {
 		fn = strings.TrimPrefix(*path, "/media/")
 		Root = GLOBAL.MEDIA_ROOT
 	}
-	content, err := os.ReadFile(fmt.Sprintf("%s%s", Root, fn))
+
+	file, err := os.Open(fmt.Sprintf("%s%s", Root, fn))
+	info, _ := file.Stat()
+	size := info.Size()
+
 	if err != nil {
 		if os.IsNotExist(err) {
 			w.WriteHeader(http.StatusNotFound)
@@ -32,6 +41,13 @@ func ServeStatic(w http.ResponseWriter, path *string, mode bool) {
 		}
 		return
 	}
-	go CACHE.add_cache(*path, content)
-	w.Write(content)
+	go CACHE.add_cache(*path, file, int(size))
+	_, err = Conn.Write([]byte("HTTP/1.1 200 OK\r\n\r\n"))
+	if err != nil {
+		panic(err)
+	}
+	_, err = syscall.Sendfile(int(socket_file.Fd()), int(file.Fd()), nil, int(size))
+	if err != nil {
+		panic(err)
+	}
 }
