@@ -8,7 +8,7 @@ import (
 
 type Manager interface {
 	Addserver(*Backend)
-	Schedule() *Backend
+	Schedule(string) *Backend
 	checkAllBackends()
 	UpdateHealth(*Backend, bool)
 	Release_Connection(*Backend)

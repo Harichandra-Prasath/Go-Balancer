@@ -52,6 +52,8 @@ func InitialiseSystem() error {
 	switch GLOBAL.ALGO {
 	case "RR":
 		MANAGER = GetPool(0)
+	case "RANDOM":
+		MANAGER = GetPool(0)
 	case "LC":
 		MANAGER = GetQueue(0)
 	}

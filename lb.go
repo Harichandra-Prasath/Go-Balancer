@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math/rand"
 	"sync/atomic"
 )
 
@@ -23,23 +24,33 @@ func (p *Pool) GetCurrent() int {
 	return int(atomic.AddInt64(&p.Current, int64(1)) % int64(len(p.Servers)))
 }
 
-func (p *Pool) Schedule() *Backend {
+func (p *Pool) Schedule(Algo string) *Backend {
 	// This functions implies the balancing algorithm (Round Robin) for backends and return them if and only if they are healthy
-	start := p.GetCurrent()
-	total := len(p.Servers)
-	width := start + total
+	switch Algo {
+	case "RR":
+		start := p.GetCurrent()
+		total := len(p.Servers)
+		width := start + total
 
-	for i := start; i < width; i++ {
-		current := i % len(p.Servers) // Padding
-		if p.Servers[current].getHealth() {
+		for i := start; i < width; i++ {
+			current := i % len(p.Servers) // Padding
+			if p.Servers[current].getHealth() {
 
-			if i != start {
-				atomic.AddInt64(&p.Current, int64(i))
+				if i != start {
+					atomic.AddInt64(&p.Current, int64(i))
+				}
+				atomic.AddInt64(&p.Active_Connections, int64(1))
+				return p.Servers[current]
 			}
+		}
+	case "RANDOM":
+		backend := p.Servers[rand.Intn(len(p.Servers))]
+		if backend.getHealth() {
 			atomic.AddInt64(&p.Active_Connections, int64(1))
-			return p.Servers[current]
+			return backend
 		}
 	}
+
 	return nil // No servers or none of them are healthy
 }
 
@@ -48,8 +59,11 @@ func (P *Pool) Release_Connection(b *Backend) {
 	atomic.AddInt64(&P.Active_Connections, int64(-1))
 }
 
-func (Pq *Heapq) Schedule() *Backend {
+func (Pq *Heapq) Schedule(Algo string) *Backend {
 	// This functions implies the balancing algorithm (Least Connections) for backends and return them if and only if they are healthy
+	if Algo != "LC" {
+		return nil
+	}
 	for len(*Pq) > 0 {
 
 		server := Pq.peek()
